@@ -6,6 +6,11 @@ variable "subnet_cidrs" {
   type = list(string)
 }
 
+variable "public_subnet_cidrs" {
+  type = list(string)
+  default = []
+}
+
 variable "azs" {
   type = list(string)
 }

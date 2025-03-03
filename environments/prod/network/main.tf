@@ -6,22 +6,25 @@ module "vpc" {
 }
 
 module "subnet" {
-  source       = "../../../modules/subnet"
-  vpc_id       = module.vpc.vpc_id
-  subnet_cidrs = var.subnet_cidrs
-  azs          = var.azs
-  env          = "prod"
-  tags         = var.tags
+  source          = "../../../modules/subnet"
+  vpc_id          = module.vpc.vpc_id
+  subnet_cidrs    = var.private_subnet_cidrs
+  azs             = var.azs
+  env             = "prod"
+  tags            = var.tags
 }
 
-module "internet_gw" {
-  source         = "../../../modules/internet_gw"
-  vpc_id         = module.vpc.vpc_id
-  route_table_id = aws_route_table.main.id
-  env            = "prod"
-  tags           = var.tags
-}
-
-resource "aws_route_table" "main" {
+resource "aws_route_table" "private_rt" {
   vpc_id = module.vpc.vpc_id
+
+  tags = merge(
+    var.tags,
+    { Name = "prod-private-rt" }
+  )
+}
+
+resource "aws_route_table_association" "private" {
+  count          = length(var.private_subnet_cidrs)
+  subnet_id      = element(module.subnet.subnet_ids, count.index)
+  route_table_id = aws_route_table.private_rt.id
 }

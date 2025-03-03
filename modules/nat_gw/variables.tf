@@ -2,12 +2,12 @@ variable "vpc_id" {
   type = string
 }
 
-variable "subnet_ids" {
-  type = list(string)
+variable "public_subnet_id" {
+  type = string
 }
 
-variable "vm_ids" {
-  type = list(string)
+variable "private_route_table_id" {
+  type = string
 }
 
 variable "env" {

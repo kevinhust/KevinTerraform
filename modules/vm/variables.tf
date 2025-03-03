@@ -1,28 +1,26 @@
-variable "instance_count" {
-  type = number
-}
+# Number of instances to create
+variable "instance_count" { type = number }
 
-variable "instance_type" {
-  type = string
-}
+# Instance type
+variable "instance_type" { type = string }
 
-variable "subnet_ids" {
-  type = list(string)
-}
+# Subnet IDs for instances
+variable "subnet_ids" { type = list(string) }
 
-variable "env" {
-  type = string
-}
+# Deployment environment
+variable "env" { type = string }
 
-variable "tags" {
-  type = map(string)
-}
+# Tags for resources
+variable "tags" { type = map(string) }
 
-variable "vpc_id" {
-  type = string
-}
+# VPC identifier
+variable "vpc_id" { type = string }
 
-variable "bastion_cidr" {
-  type    = string
-  default = "10.0.0.0/32"
-}
+# CIDR block for Bastion host access
+variable "bastion_cidr" { type = string, default = "10.0.0.0/32" }
+
+# Prefix for resource naming
+variable "prefix" { type = string, default = "kevinproject", description = "Name prefix" }
+
+# SSH key pair name
+variable "key_name" { type = string, description = "SSH key pair name" }

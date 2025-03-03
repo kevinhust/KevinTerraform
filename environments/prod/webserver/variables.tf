@@ -1,14 +1,14 @@
-# Instance type
+# Instance type for different environments
 variable "instance_type" {
   default     = {
     "non-prod" = "t2.micro"
     "prod"     = "t2.medium"
   }
-  description = "Type of the instance"
   type        = map(string)
+  description = "Type of the instance"
 }
 
-# Default tags
+# Default tags for resources
 variable "default_tags" {
   default = {
     "Owner" = "acs730"
@@ -18,30 +18,33 @@ variable "default_tags" {
   description = "Default tags to be applied to all AWS resources"
 }
 
-# Prefix to identify resources
+# Prefix for resource naming
 variable "prefix" {
   default     = "kevinproject"
   type        = string
   description = "Name prefix"
 }
 
-# Environment
+# Deployment environment
 variable "env" {
   default     = "prod"
   type        = string
   description = "Deployment Environment"
 }
 
+# VPC identifier
 variable "vpc_id" {
   type        = string
   description = "VPC identifier"
 }
 
+# Private subnet identifiers
 variable "private_subnet_ids" {
   type        = list(string)
   description = "Private subnet identifiers"
 }
 
+# VPC CIDR block
 variable "vpc_cidr" {
   type        = string
   description = "VPC CIDR block"

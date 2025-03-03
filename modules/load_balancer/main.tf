@@ -1,15 +1,16 @@
+# Create Application Load Balancer
 resource "aws_lb" "main" {
-  name               = "${var.env}-lb"
+  name               = "${var.prefix}-${var.env}-lb"
   internal           = false
   load_balancer_type = "application"
   subnets            = var.subnet_ids
   security_groups    = [aws_security_group.lb_sg.id]
-
-  tags = var.tags
+  tags               = var.tags
 }
 
+# Create security group for Load Balancer
 resource "aws_security_group" "lb_sg" {
-  name        = "${var.env}-lb-sg"
+  name        = "${var.prefix}-${var.env}-lb-sg"
   description = "Security group for Load Balancer in ${var.env}"
   vpc_id      = var.vpc_id
 
@@ -30,8 +31,9 @@ resource "aws_security_group" "lb_sg" {
   tags = var.tags
 }
 
+# Create target group for Load Balancer
 resource "aws_lb_target_group" "main" {
-  name     = "${var.env}-tg"
+  name     = "${var.prefix}-${var.env}-tg"
   port     = 80
   protocol = "HTTP"
   vpc_id   = var.vpc_id
@@ -47,6 +49,7 @@ resource "aws_lb_target_group" "main" {
   }
 }
 
+# Create listener for Load Balancer
 resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.main.arn
   port              = 80
@@ -58,6 +61,7 @@ resource "aws_lb_listener" "http" {
   }
 }
 
+# Attach VMs to target group
 resource "aws_lb_target_group_attachment" "attachment" {
   count            = length(var.vm_ids)
   target_group_arn = aws_lb_target_group.main.arn

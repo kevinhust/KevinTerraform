@@ -1,9 +1,11 @@
 # Output public IPs of web server instances
 output "public_ip" {
-  value = [for vm in module.vm.vm_ids : aws_instance.vm[0].public_ip]  # Adjust based on actual instance data
+  value = module.vm_prod.public_ips
+  description = "Public IP addresses of the VMs"
 }
 
 # Output VM IDs
 output "vm_ids" {
-  value = module.vm.vm_ids
+  value = module.vm_prod.vm_ids
+  description = "IDs of the VMs"
 }

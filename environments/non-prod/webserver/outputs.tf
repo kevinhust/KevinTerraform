@@ -1,14 +1,19 @@
-# Output public IPs of web server instances
 output "public_ip" {
-  value = [for vm in module.vm.vm_ids : aws_instance.vm[0].public_ip]  # Adjust based on actual instance data
+  value = module.vm_nonprod.public_ips
+  description = "Public IP addresses of the VMs"
 }
 
-# Output VM IDs
+output "private_ip" {
+  value = module.vm_nonprod.private_ips
+  description = "Private IP addresses of the VMs"
+}
+
 output "vm_ids" {
-  value = module.vm.vm_ids
+  value = module.vm_nonprod.vm_ids
+  description = "IDs of the VMs"
 }
 
-# Output load balancer DNS name
 output "lb_dns" {
-  value = module.load_balancer.lb_dns
+  value = module.load_balancer_nonprod.lb_dns
+  description = "DNS name of the Load Balancer"
 }

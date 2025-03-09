@@ -41,7 +41,7 @@ module "vm_nonprod" {
   subnet_ids     = data.aws_subnets.private.ids
   vpc_id         = data.aws_vpc.selected.id
   env            = var.env
-  tags           = local.default_tags
+  tags           = var.default_tags
   bastion_cidr   = var.vpc_cidr
   prefix         = var.prefix
   key_name       = "kevin-terraform-key"
@@ -55,22 +55,6 @@ module "load_balancer_nonprod" {
   subnet_ids = data.aws_subnets.public.ids
   vm_ids     = module.vm_nonprod.vm_ids
   env        = var.env
-  tags       = local.default_tags
+  tags       = var.default_tags
   prefix     = var.prefix
-}
-
-# Add outputs
-output "vm_private_ips" {
-  description = "Private IP addresses of the VMs"
-  value       = module.vm_nonprod.private_ips
-}
-
-output "lb_dns" {
-  description = "DNS name of the load balancer"
-  value       = module.load_balancer_nonprod.lb_dns
-}
-
-output "vm_ids" {
-  description = "Instance IDs of the VMs"
-  value       = module.vm_nonprod.vm_ids
 }

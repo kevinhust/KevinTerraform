@@ -1,11 +1,9 @@
 output "vm_ids" {
+  description = "Instance IDs of the VMs"
   value = module.vm_prod.vm_ids
 }
 
-output "vm_public_ips" {
-  value = module.vm_prod.public_ips
-}
-
-output "lb_dns" {
-  value = module.load_balancer_prod.lb_dns
+output "vm_private_ips" {
+  description = "Private IP addresses of the VMs"
+  value = module.vm_prod.private_ips
 }

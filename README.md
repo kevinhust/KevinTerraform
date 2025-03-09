@@ -196,6 +196,14 @@ Terraform/
     - Private subnet 3 (`10.1.3.0/24`, us-east-1a)
     - Private subnet 4 (`10.1.4.0/24`, us-east-1b)
     - No public subnets
+- Instance Names:
+  - Non-prod:
+    - Bastion Host: `kevin-non-prod-bastion`
+    - VM1: `kevin-nonprod-vm1`
+    - VM2: `kevin-nonprod-vm2`
+  - Prod:
+    - VM1: `kevin-prod-vm1`
+    - VM2: `kevin-prod-vm2`
 - Instance Types:
   - Non-prod: `t2.micro`
   - Prod: `t2.medium`

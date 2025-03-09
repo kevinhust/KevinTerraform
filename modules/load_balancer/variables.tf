@@ -1,15 +1,15 @@
 variable "vpc_id" {
-  description = "ID of the VPC"
+  description = "VPC ID"
   type        = string
 }
 
 variable "subnet_ids" {
-  description = "List of subnet IDs for the load balancer"
+  description = "Subnet IDs for the load balancer"
   type        = list(string)
 }
 
 variable "vm_ids" {
-  description = "List of VM instance IDs"
+  description = "Instance IDs to attach to the target group"
   type        = list(string)
 }
 
@@ -19,11 +19,23 @@ variable "env" {
 }
 
 variable "tags" {
-  description = "Tags for Load Balancer resources"
+  description = "Tags to apply to resources"
   type        = map(string)
 }
 
 variable "prefix" {
-  description = "Resource name prefix"
+  description = "Prefix for resource names"
   type        = string
+}
+
+variable "internal" {
+  description = "Whether the load balancer is internal"
+  type        = bool
+  default     = false
+}
+
+variable "vpc_cidr" {
+  description = "VPC CIDR block for security group rules"
+  type        = string
+  default     = "0.0.0.0/0"
 }

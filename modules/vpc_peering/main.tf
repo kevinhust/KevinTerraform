@@ -15,6 +15,7 @@ resource "aws_vpc_peering_connection" "peer" {
 
 # Add routes to requester VPC route tables
 resource "aws_route" "requester_public" {
+  count                     = var.requester_public_route_table_id != null ? 1 : 0
   route_table_id            = var.requester_public_route_table_id
   destination_cidr_block    = var.accepter_vpc_cidr
   vpc_peering_connection_id = aws_vpc_peering_connection.peer.id

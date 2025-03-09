@@ -1,7 +1,7 @@
 # 创建应用负载均衡器
 resource "aws_lb" "alb" {
   name               = "${var.prefix}-${var.env}-alb"
-  internal           = false
+  internal           = var.internal
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb_sg.id]
   subnets           = var.subnet_ids
@@ -65,7 +65,7 @@ resource "aws_security_group" "alb_sg" {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = var.internal ? [var.vpc_cidr] : ["0.0.0.0/0"]  # 如果是内部ALB，只允许VPC内访问
   }
 
   egress {
@@ -78,10 +78,4 @@ resource "aws_security_group" "alb_sg" {
   tags = merge(var.tags, {
     Name = "${var.prefix}-${var.env}-alb-sg"
   })
-}
-
-# 输出ALB DNS名称
-output "lb_dns" {
-  description = "DNS name of the load balancer"
-  value       = aws_lb.alb.dns_name
 }

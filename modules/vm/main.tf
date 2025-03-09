@@ -6,15 +6,15 @@ resource "aws_instance" "vm" {
   vpc_security_group_ids = [aws_security_group.vm_sg.id]
   key_name              = var.key_name
 
-  user_data = var.is_bastion ? null : file("${path.root}/../../install_apache.sh")
+  user_data = var.is_bastion ? null : file("${path.module}/../../install_apache.sh")
 
   tags = merge(var.tags, {
-    Name = "${var.prefix}-${var.env}-${var.is_bastion ? "bastion" : "vm"}-${count.index + 1}"
+    Name = var.is_bastion ? "${var.prefix}-${var.env}-bastion" : "${var.prefix}-${var.env}-vm-${count.index + 1}"
   })
 }
 
 resource "aws_security_group" "vm_sg" {
-  name        = "${var.prefix}-${var.env}-${var.is_bastion ? "bastion" : "vm"}-sg"
+  name        = var.is_bastion ? "${var.prefix}-${var.env}-bastion-sg" : "${var.prefix}-${var.env}-vm-sg"
   description = "Security group for ${var.is_bastion ? "Bastion Host" : "VMs"} in ${var.env}"
   vpc_id      = var.vpc_id
 
@@ -42,7 +42,7 @@ resource "aws_security_group" "vm_sg" {
   }
 
   tags = merge(var.tags, {
-    Name = "${var.prefix}-${var.env}-${var.is_bastion ? "bastion" : "vm"}-sg"
+    Name = var.is_bastion ? "${var.prefix}-${var.env}-bastion-sg" : "${var.prefix}-${var.env}-vm-sg"
   })
 }
 

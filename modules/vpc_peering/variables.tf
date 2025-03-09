@@ -36,6 +36,7 @@ variable "accepter_vpc_cidr" {
 variable "requester_public_route_table_id" {
   description = "请求方公共子网路由表ID"
   type        = string
+  default     = null
 }
 
 variable "requester_private_route_table_id" {

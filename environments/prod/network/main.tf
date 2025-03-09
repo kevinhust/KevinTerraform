@@ -42,43 +42,45 @@ resource "aws_route_table_association" "private_prod" {
 }
 
 # Get non-prod VPC information
-data "aws_vpc" "non_prod" {
-  tags = {
-    Name = "${var.prefix}-non-prod-vpc"
-  }
-}
+# data "aws_vpc" "non_prod" {
+#   tags = {
+#     Name = "${var.prefix}-non-prod-vpc"
+#   }
+# }
 
-data "aws_route_tables" "non_prod_public" {
-  vpc_id = data.aws_vpc.non_prod.id
-  tags = {
-    Name = "${var.prefix}-non-prod-public-rt"
-  }
-}
+# data "aws_route_tables" "non_prod_public" {
+#   vpc_id = data.aws_vpc.non_prod.id
+#   tags = {
+#     Name = "${var.prefix}-non-prod-public-rt"
+#   }
+# }
 
-data "aws_route_tables" "non_prod_private" {
-  vpc_id = data.aws_vpc.non_prod.id
-  tags = {
-    Name = "${var.prefix}-non-prod-private-rt"
-  }
-}
+# data "aws_route_tables" "non_prod_private" {
+#   vpc_id = data.aws_vpc.non_prod.id
+#   tags = {
+#     Name = "${var.prefix}-non-prod-private-rt"
+#   }
+# }
 
 # Create VPC Peering connection
-module "vpc_peering" {
-  source = "../../../modules/vpc_peering"
+# module "vpc_peering" {
+#   source = "../../../modules/vpc_peering"
 
-  prefix        = var.prefix
-  env_requester = var.env
-  env_accepter  = "non-prod"
+#   prefix        = var.prefix
+#   env_requester = var.env
+#   env_accepter  = "non-prod"
 
-  requester_vpc_id = module.vpc_prod.vpc_id
-  accepter_vpc_id  = data.aws_vpc.non_prod.id
+#   requester_vpc_id = module.vpc_prod.vpc_id
+#   accepter_vpc_id  = data.aws_vpc.non_prod.id
 
-  requester_vpc_cidr = var.vpc_cidr
-  accepter_vpc_cidr  = "10.0.0.0/16"  # non-prod VPC CIDR
+#   requester_vpc_cidr = var.vpc_cidr
+#   accepter_vpc_cidr  = "10.0.0.0/16"  # non-prod VPC CIDR
 
-  requester_private_route_table_id = aws_route_table.private_rt_prod.id
-  accepter_public_route_table_id  = tolist(data.aws_route_tables.non_prod_public.ids)[0]
-  accepter_private_route_table_id = tolist(data.aws_route_tables.non_prod_private.ids)[0]
+#   requester_public_route_table_id  = null  # 生产环境没有公共路由表
+#   requester_private_route_table_id = aws_route_table.private_rt_prod.id
+  
+#   accepter_public_route_table_id  = tolist(data.aws_route_tables.non_prod_public.ids)[0]
+#   accepter_private_route_table_id = tolist(data.aws_route_tables.non_prod_private.ids)[0]
 
-  tags = var.default_tags
-}
+#   tags = var.default_tags
+# }

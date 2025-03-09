@@ -81,45 +81,45 @@ resource "aws_route_table_association" "private_nonprod" {
 }
 
 # Get prod VPC information
-data "aws_vpc" "prod" {
-  tags = {
-    Name = "${var.prefix}-prod-vpc"
-  }
-}
+# data "aws_vpc" "prod" {
+#   tags = {
+#     Name = "${var.prefix}-prod-vpc"
+#   }
+# }
 
-data "aws_route_tables" "prod_public" {
-  vpc_id = data.aws_vpc.prod.id
-  tags = {
-    Name = "${var.prefix}-prod-public-rt"
-  }
-}
+# data "aws_route_tables" "prod_public" {
+#   vpc_id = data.aws_vpc.prod.id
+#   tags = {
+#     Name = "${var.prefix}-prod-public-rt"
+#   }
+# }
 
-data "aws_route_tables" "prod_private" {
-  vpc_id = data.aws_vpc.prod.id
-  tags = {
-    Name = "${var.prefix}-prod-private-rt"
-  }
-}
+# data "aws_route_tables" "prod_private" {
+#   vpc_id = data.aws_vpc.prod.id
+#   tags = {
+#     Name = "${var.prefix}-prod-private-rt"
+#   }
+# }
 
 # Create VPC Peering connection
-module "vpc_peering" {
-  source = "../../../modules/vpc_peering"
+# module "vpc_peering" {
+#   source = "../../../modules/vpc_peering"
 
-  prefix        = var.prefix
-  env_requester = var.env
-  env_accepter  = "prod"
+#   prefix        = var.prefix
+#   env_requester = var.env
+#   env_accepter  = "prod"
 
-  requester_vpc_id = module.vpc_nonprod.vpc_id
-  accepter_vpc_id  = data.aws_vpc.prod.id
+#   requester_vpc_id = module.vpc_nonprod.vpc_id
+#   accepter_vpc_id  = data.aws_vpc.prod.id
 
-  requester_vpc_cidr = var.vpc_cidr
-  accepter_vpc_cidr  = "10.1.0.0/16"  # prod VPC CIDR
+#   requester_vpc_cidr = var.vpc_cidr
+#   accepter_vpc_cidr  = "10.1.0.0/16"  # prod VPC CIDR
 
-  requester_public_route_table_id  = aws_route_table.public_rt_nonprod.id
-  requester_private_route_table_id = aws_route_table.private_rt_nonprod.id
+#   requester_public_route_table_id  = aws_route_table.public_rt_nonprod.id
+#   requester_private_route_table_id = aws_route_table.private_rt_nonprod.id
   
-  accepter_public_route_table_id  = tolist(data.aws_route_tables.prod_public.ids)[0]
-  accepter_private_route_table_id = tolist(data.aws_route_tables.prod_private.ids)[0]
+#   accepter_public_route_table_id  = tolist(data.aws_route_tables.prod_public.ids)[0]
+#   accepter_private_route_table_id = tolist(data.aws_route_tables.prod_private.ids)[0]
 
-  tags = local.default_tags
-}
+#   tags = var.default_tags
+# }

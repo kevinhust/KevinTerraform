@@ -17,17 +17,6 @@ data "aws_subnets" "private" {
   }
 }
 
-data "aws_subnets" "public" {
-  filter {
-    name   = "vpc-id"
-    values = [data.aws_vpc.selected.id]
-  }
-  filter {
-    name   = "tag:Name"
-    values = ["${var.prefix}-${var.env}-public-*"]
-  }
-}
-
 # Define local tags
 locals {
   default_tags = merge(var.default_tags, { "env" = var.env })
@@ -41,36 +30,9 @@ module "vm_prod" {
   subnet_ids     = data.aws_subnets.private.ids
   vpc_id         = data.aws_vpc.selected.id
   env            = var.env
-  tags           = local.default_tags
+  tags           = var.default_tags
   bastion_cidr   = var.vpc_cidr
   prefix         = var.prefix
   key_name       = "kevin-terraform-key"
   is_bastion     = false
-}
-
-# Deploy Load Balancer between VM1 and VM2
-module "load_balancer_prod" {
-  source     = "../../../modules/load_balancer"
-  vpc_id     = data.aws_vpc.selected.id
-  subnet_ids = data.aws_subnets.public.ids
-  vm_ids     = module.vm_prod.vm_ids
-  env        = var.env
-  tags       = local.default_tags
-  prefix     = var.prefix
-}
-
-# Add outputs
-output "vm_private_ips" {
-  description = "Private IP addresses of the VMs"
-  value       = module.vm_prod.private_ips
-}
-
-output "lb_dns" {
-  description = "DNS name of the load balancer"
-  value       = module.load_balancer_prod.lb_dns
-}
-
-output "vm_ids" {
-  description = "Instance IDs of the VMs"
-  value       = module.vm_prod.vm_ids
 }

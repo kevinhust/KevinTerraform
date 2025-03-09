@@ -1,19 +1,19 @@
 variable "vpc_cidr" {
+  description = "CIDR block for VPC"
   type        = string
-  description = "The CIDR block for the VPC"
 }
 
 variable "env" {
+  description = "Environment name"
   type        = string
-  description = "The environment (e.g., non-prod, prod)"
 }
 
 variable "tags" {
+  description = "Tags for VPC resources"
   type        = map(string)
-  description = "A map of tags to apply to resources"
 }
 
 variable "prefix" {
+  description = "Resource name prefix"
   type        = string
-  description = "The prefix for resource names"
 }

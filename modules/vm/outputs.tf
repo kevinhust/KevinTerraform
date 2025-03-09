@@ -1,14 +1,14 @@
 output "vm_ids" {
+  description = "List of VM instance IDs"
   value       = aws_instance.vm[*].id
-  description = "List of IDs for the VMs or Bastion instances"
 }
 
 output "public_ips" {
+  description = "List of public IP addresses assigned to the instances"
   value       = aws_instance.vm[*].public_ip
-  description = "List of public IPs for the VMs or Bastion instances"
 }
 
 output "private_ips" {
+  description = "List of private IP addresses assigned to the instances"
   value       = aws_instance.vm[*].private_ip
-  description = "List of private IPs for the VMs or Bastion instances"
 }

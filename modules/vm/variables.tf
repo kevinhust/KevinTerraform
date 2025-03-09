@@ -1,50 +1,50 @@
 variable "instance_count" {
+  description = "Number of instances to create"
   type        = number
-  description = "Number of VM instances to create"
 }
 
 variable "instance_type" {
+  description = "EC2 instance type"
   type        = string
-  description = "The instance type for VMs"
 }
 
 variable "subnet_ids" {
+  description = "List of subnet IDs"
   type        = list(string)
-  description = "List of subnet IDs for VMs"
 }
 
 variable "vpc_id" {
+  description = "ID of the VPC"
   type        = string
-  description = "The ID of the VPC"
 }
 
 variable "env" {
+  description = "Environment name"
   type        = string
-  description = "The environment (e.g., non-prod, prod)"
 }
 
 variable "tags" {
+  description = "Tags for VM resources"
   type        = map(string)
-  description = "A map of tags to apply to resources"
-}
-
-variable "prefix" {
-  type        = string
-  description = "The prefix for resource names"
 }
 
 variable "bastion_cidr" {
+  description = "CIDR block for bastion access"
   type        = string
-  description = "The CIDR block for SSH access (usually from Bastion)"
+}
+
+variable "prefix" {
+  description = "Resource name prefix"
+  type        = string
 }
 
 variable "key_name" {
+  description = "Name of the SSH key pair"
   type        = string
-  description = "The name of the key pair for SSH access"
 }
 
 variable "is_bastion" {
+  description = "Whether this is a bastion host"
   type        = bool
-  description = "Whether this instance is a Bastion host (true) or a regular VM (false)"
   default     = false
 }

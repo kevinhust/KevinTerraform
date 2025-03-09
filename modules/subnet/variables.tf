@@ -1,34 +1,34 @@
 variable "vpc_id" {
+  description = "ID of the VPC"
   type        = string
-  description = "The ID of the VPC"
 }
 
 variable "subnet_cidrs" {
-  type        = list(string)
   description = "List of subnet CIDR blocks"
+  type        = list(string)
 }
 
 variable "public_subnet_cidrs" {
-  type        = list(string)
   description = "List of public subnet CIDR blocks"
+  type        = list(string)
 }
 
 variable "azs" {
-  type        = list(string)
   description = "List of availability zones"
+  type        = list(string)
 }
 
 variable "env" {
+  description = "Environment name"
   type        = string
-  description = "The environment (e.g., non-prod, prod)"
 }
 
 variable "tags" {
+  description = "Tags for subnet resources"
   type        = map(string)
-  description = "A map of tags to apply to resources"
 }
 
 variable "prefix" {
+  description = "Resource name prefix"
   type        = string
-  description = "The prefix for resource names"
 }

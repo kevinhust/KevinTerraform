@@ -1,35 +1,34 @@
+variable "azs" {
+  description = "List of availability zones"
+  type        = list(string)
+}
+
 variable "vpc_cidr" {
+  description = "CIDR block for VPC"
   type        = string
-  description = "The CIDR block for the VPC"
 }
 
 variable "public_subnet_cidrs" {
+  description = "List of CIDR blocks for public subnets"
   type        = list(string)
-  description = "List of public subnet CIDR blocks"
 }
 
 variable "private_subnet_cidrs" {
+  description = "List of CIDR blocks for private subnets"
   type        = list(string)
-  description = "List of private subnet CIDR blocks"
-}
-
-variable "azs" {
-  type        = list(string)
-  description = "List of availability zones"
 }
 
 variable "env" {
+  description = "Environment name"
   type        = string
-  description = "The environment (e.g., non-prod, prod)"
-  default     = "non-prod"
-}
-
-variable "default_tags" {
-  type        = map(string)
-  description = "A map of default tags to apply to resources"
 }
 
 variable "prefix" {
+  description = "Resource name prefix"
   type        = string
-  description = "The prefix for resource names"
+}
+
+variable "default_tags" {
+  description = "Default tags for all resources"
+  type        = map(string)
 }

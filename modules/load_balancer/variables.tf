@@ -1,29 +1,29 @@
 variable "vpc_id" {
+  description = "ID of the VPC"
   type        = string
-  description = "The ID of the VPC"
 }
 
 variable "subnet_ids" {
+  description = "List of subnet IDs for the load balancer"
   type        = list(string)
-  description = "List of subnet IDs for the Load Balancer"
 }
 
 variable "vm_ids" {
+  description = "List of VM instance IDs"
   type        = list(string)
-  description = "List of VM IDs to attach to the Load Balancer"
 }
 
 variable "env" {
+  description = "Environment name"
   type        = string
-  description = "The environment (e.g., non-prod, prod)"
 }
 
 variable "tags" {
+  description = "Tags for Load Balancer resources"
   type        = map(string)
-  description = "A map of tags to apply to resources"
 }
 
 variable "prefix" {
+  description = "Resource name prefix"
   type        = string
-  description = "The prefix for resource names"
 }

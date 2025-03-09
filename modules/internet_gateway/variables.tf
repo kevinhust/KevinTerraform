@@ -1,24 +1,24 @@
 variable "vpc_id" {
+  description = "ID of the VPC"
   type        = string
-  description = "The ID of the VPC"
 }
 
 variable "route_table_id" {
+  description = "ID of the route table"
   type        = string
-  description = "The ID of the route table"
 }
 
 variable "env" {
+  description = "Environment name"
   type        = string
-  description = "The environment (e.g., non-prod, prod)"
 }
 
 variable "tags" {
+  description = "Tags for Internet Gateway resources"
   type        = map(string)
-  description = "A map of tags to apply to resources"
 }
 
 variable "prefix" {
+  description = "Resource name prefix"
   type        = string
-  description = "The prefix for resource names"
 }

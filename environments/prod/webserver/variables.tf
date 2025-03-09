@@ -1,44 +1,33 @@
-variable "vpc_id" {
-  type        = string
-  description = "The ID of the VPC"
-}
-
-variable "public_subnet_ids" {
-  type        = list(string)
-  description = "List of public subnet IDs"
-}
-
-variable "private_subnet_ids" {
-  type        = list(string)
-  description = "List of private subnet IDs"
-}
-
+# VPC CIDR is needed for bastion access
 variable "vpc_cidr" {
+  description = "CIDR block of the VPC"
   type        = string
-  description = "The CIDR block for the VPC"
 }
 
+# Instance type mapping
 variable "instance_type" {
+  description = "EC2 instance type mapping"
   type        = map(string)
-  description = "Map of instance types per environment"
-  default     = {
+  default = {
     "non-prod" = "t2.micro"
     "prod"     = "t3.medium"
   }
 }
 
+# Environment name
 variable "env" {
+  description = "Environment name"
   type        = string
-  description = "The environment (e.g., non-prod, prod)"
-  default     = "prod"
 }
 
-variable "default_tags" {
-  type        = map(string)
-  description = "A map of default tags to apply to resources"
-}
-
+# Resource prefix
 variable "prefix" {
+  description = "Resource name prefix"
   type        = string
-  description = "The prefix for resource names"
+}
+
+# Default tags
+variable "default_tags" {
+  description = "Default tags for all resources"
+  type        = map(string)
 }

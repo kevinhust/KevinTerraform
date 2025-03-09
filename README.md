@@ -20,10 +20,23 @@ Welcome to the Terraform AWS Infrastructure Project! This repository contains Te
 
 This project uses Terraform to provision AWS resources for two environments:
 
-- **Non-Production (non-prod)**: Includes 2 public subnets, 2 private subnets, a NAT Gateway, a Bastion Host, VMs with Apache web servers, and a Load Balancer.
-- **Production (prod)**: Includes 2 public subnets, 2 private subnets, and VMs, with independent public access.
+- **Non-Production (non-prod)**: 
+  - 2 public subnets (Public subnet 1, Public subnet 2)
+  - 2 private subnets (Private subnet 1, Private subnet 2)
+  - NAT Gateway
+  - Internet Gateway
+  - Bastion Host
+  - VMs with Apache web servers
+  - Load Balancer in public subnets
+  
+- **Production (prod)**: 
+  - 2 private subnets only (Private subnet 3, Private subnet 4)
+  - Internet Gateway attached to VPC
+  - No public subnets
+  - No NAT Gateway
+  - Accessed via non-prod Bastion Host through VPC Peering
 
-The infrastructure is connected via VPC Peering, allowing communication between `non-prod` and `prod` environments. This setup is part of an experimental project and focuses on functionality rather than long-term maintenance.
+The infrastructure is connected via VPC Peering, allowing secure communication between `non-prod` and `prod` environments. Production environment is completely isolated from direct internet access, with all access controlled through the non-prod Bastion Host.
 
 ## Features
 
@@ -174,12 +187,36 @@ Terraform/
   - Non-prod: `10.0.0.0/16`
   - Prod: `10.1.0.0/16`
 - Subnets:
-  - Non-prod: 2 public (`10.0.1.0/24`, `10.0.2.0/24`), 2 private (`10.0.3.0/24`, `10.0.4.0/24`)
-  - Prod: 2 public (`10.1.1.0/24`, `10.1.2.0/24`), 2 private (`10.1.3.0/24`, `10.1.4.0/24`)
+  - Non-prod: 
+    - Public subnet 1 (`10.0.1.0/24`, us-east-1a)
+    - Public subnet 2 (`10.0.2.0/24`, us-east-1b)
+    - Private subnet 1 (`10.0.3.0/24`, us-east-1a)
+    - Private subnet 2 (`10.0.4.0/24`, us-east-1b)
+  - Prod: 
+    - Private subnet 3 (`10.1.3.0/24`, us-east-1a)
+    - Private subnet 4 (`10.1.4.0/24`, us-east-1b)
+    - No public subnets
 - Instance Types:
   - Non-prod: `t2.micro`
   - Prod: `t2.medium`
+- Availability Zones:
+  - us-east-1a
+  - us-east-1b
 - **Tags**: Default tags include `Owner=acs730` and `App=Web`.
+
+## Security Features
+
+- Production Environment:
+  - Completely isolated from direct internet access
+  - No public subnets
+  - Access only through VPC Peering from non-prod Bastion Host
+  - Internet Gateway attached but not used (for future flexibility)
+  
+- Non-Production Environment:
+  - Bastion Host in public subnet for secure SSH access
+  - NAT Gateway for private subnet internet access
+  - Load Balancer in public subnets
+  - Apache web servers in private subnets
 
 ## Outputs
 

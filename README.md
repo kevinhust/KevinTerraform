@@ -1,266 +1,286 @@
-# [KevinTerraform](https://github.com/kevinhust/KevinTerraform)- Terraform AWS Project
+# AWS Infrastructure with Terraform
 
-Welcome to the Terraform AWS Infrastructure Project! This repository contains Terraform configurations to deploy a multi-environment AWS infrastructure, including non-production (`non-prod`) and production (`prod`) environments. The setup includes VPCs, subnets, Internet Gateways, NAT Gateways, virtual machines (VMs), and a load balancer, with Apache web servers deployed in the non-prod environment. This project is designed as an experimental setup for the ACS730 course.
+This project implements a multi-environment AWS infrastructure using Terraform, featuring a production and non-production environment with secure networking and access controls.
 
-## Table of Contents
+## Architecture Overview
 
-- [Overview](#overview)
-- [Features](#features)
-- [Prerequisites](#prerequisites)
-- [Installation](#installation)
-- [Usage](#usage)
-- [File Structure](#file-structure)
-- [Configuration Details](#configuration-details)
-- [Outputs](#outputs)
-- [Contributing](#contributing)
-- [License](#license)
-- [Contact](#contact)
+### Non-Production Environment
+- VPC (10.1.0.0/16)
+  - Public Subnets:
+    - 10.1.1.0/24: NAT Gateway
+    - 10.1.2.0/24: Bastion Host
+  - Private Subnets:
+    - 10.1.3.0/24: VM1
+    - 10.1.4.0/24: VM2
+  - Components:
+    - Internet Gateway
+    - NAT Gateway
+    - Bastion Host
+    - Application Load Balancer
+    - 2 Web Servers (Apache)
 
-## Overview
+### Production Environment
+- VPC (10.10.0.0/16)
+  - Private Subnets:
+    - 10.10.1.0/24: VM1
+    - 10.10.2.0/24: VM2
+  - Components:
+    - 2 Web Servers (Apache)
+    - No public access
 
-This project uses Terraform to provision AWS resources for two environments:
+### VPC Peering
+- Bi-directional connectivity between Production and Non-Production VPCs
+- Configured routes in both environments
+- Enables internal network communication
 
-- **Non-Production (non-prod)**: 
-  - 2 public subnets (Public subnet 1, Public subnet 2)
-  - 2 private subnets (Private subnet 1, Private subnet 2)
-  - NAT Gateway
-  - Internet Gateway
-  - Bastion Host
-  - VMs with Apache web servers
-  - Load Balancer in public subnets
-  
-- **Production (prod)**: 
-  - 2 private subnets only (Private subnet 3, Private subnet 4)
-  - Internet Gateway attached to VPC
-  - No public subnets
-  - No NAT Gateway
-  - Accessed via non-prod Bastion Host through VPC Peering
+## Security Architecture
 
-The infrastructure is connected via VPC Peering, allowing secure communication between `non-prod` and `prod` environments. Production environment is completely isolated from direct internet access, with all access controlled through the non-prod Bastion Host.
+### Access Control
+- All SSH access must go through the Non-Production Bastion Host
+- HTTP access is allowed between all internal networks (10.0.0.0/8)
+- Production environment has no direct internet access
+- NAT Gateway provides outbound internet access for private subnets
 
-## Features
+### Security Groups
+1. Bastion Host (Non-Prod)
+   - Inbound: SSH (22) from Internet
+   - Outbound: All traffic allowed
 
-- Automated deployment of VPCs, subnets, and gateways using Terraform.
-- Deployment of EC2 instances with Apache web servers in the non-prod environment.
-- Load balancing for non-prod VMs.
-- Bastion Host for SSH access to private instances.
-- VPC Peering between non-prod and prod environments.
-- S3 backend for Terraform state management with optional DynamoDB locking.
+2. Web Servers (Both Environments)
+   - Inbound:
+     - SSH (22) from Bastion only
+     - HTTP (80) from internal networks
+   - Outbound: All traffic allowed
+
+3. Load Balancer (Non-Prod)
+   - Inbound: HTTP (80) from Internet
+   - Outbound: All traffic allowed
+
+## Project Structure
+
+```
+KevinTerraform/
+├── README.md                  # Project documentation
+├── install_apache.sh         # Apache installation script
+├── environments/            # Environment-specific configurations
+│   ├── non-prod/           # Non-production environment
+│   │   ├── network/        # Network resources
+│   │   │   ├── main.tf
+│   │   │   ├── variables.tf
+│   │   │   └── terraform.tfvars
+│   │   └── webserver/      # Web server resources
+│   │       ├── main.tf
+│   │       ├── variables.tf
+│   │       └── terraform.tfvars
+│   └── prod/              # Production environment
+│       ├── network/       # Network resources
+│       │   ├── main.tf
+│       │   ├── variables.tf
+│       │   └── terraform.tfvars
+│       └── webserver/     # Web server resources
+│           ├── main.tf
+│           ├── variables.tf
+│           └── terraform.tfvars
+└── modules/              # Reusable modules
+    ├── vpc/
+    ├── subnet/
+    ├── internet_gateway/
+    ├── nat_gateway/
+    ├── vpc_peering/
+    ├── vm/
+    └── load_balancer/
+```
 
 ## Prerequisites
 
-Before running the project, ensure you have the following:
+1. AWS CLI installed and configured
+2. Terraform installed (v1.0.0 or newer)
+3. SSH key pair named "kevin-terraform-key"
 
-- **AWS Account**: With appropriate IAM permissions to create EC2 instances, VPCs, and other resources.
-- **Terraform**: Version 1.0 or later (install via [Terraform website](https://www.terraform.io/downloads.html)).
-- **AWS CLI**: Configured with credentials (`aws configure`).
-- **SSH Key Pair**: A public SSH key file (`kevin-terraform-key.pub`) placed in the root directory.
-- **S3 Buckets**: `kevinhust-p1-nonprod` and `kevinhust-p1-prod` for Terraform state storage.
-- **DynamoDB Tables**: `terraform-locks-nonprod` and `terraform-locks-prod` for state locking.
+## Deployment Instructions
 
-## Installation
-
-1. Clone the Repository
-
-   ```bash
-   git clone git@github.com:kevinhust/KevinTerraform.git 
-   cd KevinTerraform
-   ```
-
-   
-
-2. Initialize Terraform
-
-   - Navigate to the environment directory (e.g., `environments/non-prod/network`).
-
-   - Run:
-
-     `terraform init`
-
-3. **Verify AWS Credentials**: Ensure your AWS CLI is configured with the correct credentials and region (`us-east-1`).
-
-4. Move the Apache Script
-
-   - Ensure `install_apache.sh` is located in the root directory (`/Terraform/install_apache.sh`) and has executable permissions:
-
-     `chmod +x install_apache.sh`
-
-## Usage
-
-### Deploying Resources
-
-1. Deploy Non-Prod Network
-
-   `cd environments/non-prod/network terraform apply`
-
-   - Follow the prompts to confirm the deployment.
-
-2. Deploy Non-Prod Web Server
-
-   ```bash
-   cd ../../environments/non-prod/webserver 
-   terraform apply
-   ```
-
-3. Deploy Prod Network
-
-   ```bash
-   cd ../../environments/prod/network 
-   terraform apply`
-   ```
-
-   
-
-4. Deploy Prod Web Server
-
-   ```bash
-   cd ../../environments/prod/webserver 
-   terraform apply
-   ```
-
-   
-
-   ### Accessing the Infrastructure
-
-- Bastion Host: SSH into the Bastion Host using `ec2-user`and the private key corresponding to 
-
-  `kevin-terraform-key.pub`
-
-  `ssh -i kevin-terraform-key.pem ec2-user@<bastion-public-ip>`
-
-- **VM Access**: From the Bastion Host, SSH into private VMs (e.g., VM1, VM2) using ec2-user.
-
-- Web Access: Access the Apache web servers in non-prod via the Load Balancer DNS:
-
-  `curl http://<load-balancer-dns>`
-
-### Destroying Resources
-
-To clean up and destroy all resources:
-
-```
-terraform destroy
+1. Deploy Non-Production Network:
+```bash
+cd environments/non-prod/network
+terraform init
+terraform apply
 ```
 
-Run this command in each environment directory as needed.
-
-## File Structure
-
-```markdown
-Terraform/
-├── main.tf                    # Root configuration to import SSH key
-├── provider.tf                # AWS provider configuration
-├── environments/              # Environment-specific configurations
-│   ├── non-prod/              # Non-production environment
-│   │   ├── network/           # Network resources for non-prod
-│   │   │   ├── config.tf      # S3 backend configuration for network
-│   │   │   ├── main.tf        # Network resource definitions
-│   │   │   ├── outputs.tf     # Output values for network
-│   │   │   └── variables.tf   # Input variables for network
-│   │   ├── webserver/         # Web server resources for non-prod
-│   │   │   ├── config.tf      # S3 backend configuration for webserver
-│   │   │   ├── main.tf        # Web server resource definitions
-│   │   │   ├── outputs.tf     # Output values for webserver
-│   │   │   └── variables.tf   # Input variables for webserver
-│   ├── prod/                  # Production environment
-│   │   ├── network/           # Network resources for prod
-│   │   │   ├── config.tf      # S3 backend configuration for network
-│   │   │   ├── main.tf        # Network resource definitions
-│   │   │   ├── outputs.tf     # Output values for network
-│   │   │   └── variables.tf   # Input variables for network
-│   │   ├── webserver/         # Web server resources for prod
-│   │   │   ├── config.tf      # S3 backend configuration for webserver
-│   │   │   ├── main.tf        # Web server resource definitions
-│   │   │   ├── outputs.tf     # Output values for webserver
-│   │   │   └── variables.tf   # Input variables for webserver
-├── modules/                   # Merged module definitions
-│   ├── main.tf                # Consolidated module resources
-│   └── variables.tf           # Input variables for modules
-└── install_apache.sh          # Script to install Apache on non-prod VMs
+2. Deploy Production Network:
+```bash
+cd ../../prod/network
+terraform init
+terraform apply
 ```
 
+3. Deploy Non-Production Web Servers:
+```bash
+cd ../../non-prod/webserver
+terraform init
+terraform apply
+```
 
+4. Deploy Production Web Servers:
+```bash
+cd ../../prod/webserver
+terraform init
+terraform apply
+```
 
-## Configuration Details
+## Access Instructions
 
-- VPC CIDR:
-  - Non-prod: `10.0.0.0/16`
-  - Prod: `10.1.0.0/16`
-- Subnets:
-  - Non-prod: 
-    - Public subnet 1 (`10.0.1.0/24`, us-east-1a)
-    - Public subnet 2 (`10.0.2.0/24`, us-east-1b)
-    - Private subnet 1 (`10.0.3.0/24`, us-east-1a)
-    - Private subnet 2 (`10.0.4.0/24`, us-east-1b)
-  - Prod: 
-    - Private subnet 3 (`10.1.3.0/24`, us-east-1a)
-    - Private subnet 4 (`10.1.4.0/24`, us-east-1b)
-    - No public subnets
-- Instance Names:
-  - Non-prod:
-    - Bastion Host: `kevin-non-prod-bastion`
-    - VM1: `kevin-nonprod-vm1`
-    - VM2: `kevin-nonprod-vm2`
-  - Prod:
-    - VM1: `kevin-prod-vm1`
-    - VM2: `kevin-prod-vm2`
-- Instance Types:
-  - Non-prod: `t2.micro`
-  - Prod: `t2.medium`
-- Availability Zones:
-  - us-east-1a
-  - us-east-1b
-- **Tags**: Default tags include `Owner=acs730` and `App=Web`.
+### SSH Access
+1. Connect to Bastion Host:
+```bash
+ssh -A ec2-user@<bastion-public-ip>
+```
 
-## Security Features
+2. From Bastion, connect to any VM:
+```bash
+# Non-Prod VMs
+ssh ec2-user@10.1.3.X  # VM1
+ssh ec2-user@10.1.4.X  # VM2
 
-- Production Environment:
-  - Completely isolated from direct internet access
-  - No public subnets
-  - Access only through VPC Peering from non-prod Bastion Host
-  - Internet Gateway attached but not used (for future flexibility)
-  
-- Non-Production Environment:
-  - Bastion Host in public subnet for secure SSH access
-  - NAT Gateway for private subnet internet access
-  - Load Balancer in public subnets
-  - Apache web servers in private subnets
+# Prod VMs
+ssh ec2-user@10.10.1.X  # VM1
+ssh ec2-user@10.10.2.X  # VM2
+```
 
-## Outputs
+### HTTP Access
+- Non-Prod Environment:
+  - Via Load Balancer: http://<alb-dns-name>
+  - Direct to VMs: http://10.1.3.X or http://10.1.4.X (from internal network)
+- Prod Environment:
+  - Only accessible from internal network: http://10.10.1.X or http://10.10.2.X
 
-- Non-Prod Network Outputs:
-  - `vpc_id`: VPC ID
-  - `public_subnet_ids`: List of public subnet IDs
-  - `private_subnet_ids`: List of private subnet IDs
-  - `bastion_id`: Bastion Host instance ID
-  - `vpc_cidr`: VPC CIDR block
-- Non-Prod Webserver Outputs:
-  - `public_ip`: Public IPs of VMs
-  - `private_ip`: Private IPs of VMs
-  - `vm_ids`: VM instance IDs
-  - `lb_dns`: Load Balancer DNS name
-- Prod Network Outputs:
-  - `vpc_id`: VPC ID
-  - `public_subnet_ids`: List of public subnet IDs
-  - `private_subnet_ids`: List of private subnet IDs
-  - `vpc_cidr`: VPC CIDR block
-- Prod Webserver Outputs:
-  - `public_ip`: Public IPs of VMs
-  - `vm_ids`: VM instance IDs
+## Security Considerations
+1. Production environment is completely private with no direct internet access
+2. All SSH access is centralized through the Bastion host
+3. Security groups follow the principle of least privilege
+4. VPC peering enables secure internal communication
+
+## Maintenance
+- Regular updates through NAT Gateway
+- SSH key rotation as needed
+- Security group rule reviews
+- Regular infrastructure code updates
+
+## Troubleshooting
+1. SSH Connection Issues:
+   - Verify Bastion host security group
+   - Check SSH agent forwarding (-A flag)
+   - Confirm correct private key
+
+2. HTTP Access Issues:
+   - Verify security group rules
+   - Check Apache service status
+   - Validate VPC peering routes
 
 ## Contributing
-
-This is an experimental project for educational purposes. Contributions are welcome! Please fork the repository and submit pull requests with improvements or bug fixes.
+1. Fork the repository
+2. Create a feature branch
+3. Submit a pull request
 
 ## License
+This project is licensed under the MIT License.
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details (if applicable, create a `LICENSE` file with MIT terms).
-
-## Contact
-
-For questions or support, please contact:
-
-- Name: Kevin Wang
+## Author
+Kevin Wang
 - Email: kevinhust@gmail.com
 - GitHub: kevinhust
+
+# Terraform AWS Infrastructure Project
+
+This project uses Terraform to manage AWS infrastructure, including both production and non-production environments.
+
+## Architecture Design
+
+### Non-Production Environment (Non-Prod)
+
+#### Network Configuration
+- VPC CIDR: 10.1.0.0/16
+- Public Subnets:
+  - Subnet 1: 10.1.1.0/24 (NAT Gateway)
+  - Subnet 2: 10.1.2.0/24 (Bastion Host)
+- Private Subnets:
+  - Subnet 1: 10.1.3.0/24 (VM1)
+  - Subnet 2: 10.1.4.0/24 (VM2)
+
+#### Component Configuration
+- Internet Gateway: Provides internet access for public subnets
+- NAT Gateway: Deployed in public subnet 1, provides internet access for private subnets
+- Bastion Host: Deployed in public subnet 2, used for SSH access to instances in private subnets
+- Application Servers: 
+  - Two VMs deployed in private subnets
+  - Service provided through load balancer
+- Load Balancer:
+  - Type: Application Load Balancer (ALB)
+  - Deployed in public subnets
+  - Public-facing access
+
+### Production Environment (Prod)
+
+#### Network Configuration
+- VPC CIDR: 10.10.0.0/16
+- Private Subnets:
+  - Subnet 1: 10.10.1.0/24 (VM1)
+  - Subnet 2: 10.10.2.0/24 (VM2)
+
+#### Component Configuration
+- Application Servers:
+  - Two VMs deployed in different private subnets
+  - Direct service provision, no load balancer
+- Security:
+  - All instances in private subnets
+  - Communication with non-prod environment through VPC peering
+
+### VPC Peering Connection
+- VPC peering established between production and non-production environments
+- Enables internal network communication between environments
+
+## Deployment Sequence
+
+1. Deploy non-production network:
+```bash
+cd environments/non-prod/network
+terraform init
+terraform apply
+```
+
+2. Deploy production network:
+```bash
+cd ../../prod/network
+terraform init
+terraform apply
+```
+
+3. Deploy non-production webserver:
+```bash
+cd ../../non-prod/webserver
+terraform init
+terraform apply
+```
+
+4. Deploy production webserver:
+```bash
+cd ../../prod/webserver
+terraform init
+terraform apply
+```
+
+## Access Methods
+
+### Non-Production Environment
+- SSH access to instances in private subnets through Bastion Host
+- Application access through public ALB
+
+### Production Environment
+- SSH access through non-production environment's Bastion Host
+- Application supports internal network access only
+
+## Security Considerations
+- All production environment resources deployed in private subnets
+- Network access controlled through security groups
+- SSH key pairs used for instance access control
+- Outbound traffic in non-production environment controlled through NAT Gateway
 

@@ -1,17 +1,45 @@
-# 创建应用负载均衡器
+# Create Application Load Balancer
 resource "aws_lb" "alb" {
   name               = "${var.prefix}-${var.env}-alb"
-  internal           = var.internal
+  internal           = false
   load_balancer_type = "application"
-  security_groups    = [aws_security_group.alb_sg.id]
-  subnets           = var.subnet_ids
+  security_groups    = [aws_security_group.alb.id]
+  subnets            = var.subnet_ids
 
   tags = merge(var.tags, {
     Name = "${var.prefix}-${var.env}-alb"
   })
 }
 
-# 创建目标组
+# Create ALB Security Group
+resource "aws_security_group" "alb" {
+  name        = "${var.prefix}-${var.env}-alb-sg"
+  description = "Security group for ALB"
+  vpc_id      = var.vpc_id
+
+  # Allow HTTP traffic from anywhere
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow HTTP from anywhere"
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow all outbound traffic"
+  }
+
+  tags = merge(var.tags, {
+    Name = "${var.prefix}-${var.env}-alb-sg"
+  })
+}
+
+# Create target group
 resource "aws_lb_target_group" "tg" {
   name     = "${var.prefix}-${var.env}-tg"
   port     = 80
@@ -35,7 +63,7 @@ resource "aws_lb_target_group" "tg" {
   })
 }
 
-# 将EC2实例添加到目标组
+# Attach EC2 instances to target group
 resource "aws_lb_target_group_attachment" "tg_attachment" {
   count            = length(var.vm_ids)
   target_group_arn = aws_lb_target_group.tg.arn
@@ -43,7 +71,7 @@ resource "aws_lb_target_group_attachment" "tg_attachment" {
   port             = 80
 }
 
-# 创建监听器
+# Create listener
 resource "aws_lb_listener" "front_end" {
   load_balancer_arn = aws_lb.alb.arn
   port              = "80"
@@ -53,29 +81,4 @@ resource "aws_lb_listener" "front_end" {
     type             = "forward"
     target_group_arn = aws_lb_target_group.tg.arn
   }
-}
-
-# 创建ALB安全组
-resource "aws_security_group" "alb_sg" {
-  name        = "${var.prefix}-${var.env}-alb-sg"
-  description = "Security group for ALB"
-  vpc_id      = var.vpc_id
-
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = var.internal ? [var.vpc_cidr] : ["0.0.0.0/0"]  # 如果是内部ALB，只允许VPC内访问
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = merge(var.tags, {
-    Name = "${var.prefix}-${var.env}-alb-sg"
-  })
 }

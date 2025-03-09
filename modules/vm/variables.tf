@@ -1,10 +1,21 @@
+variable "prefix" {
+  description = "Prefix for all resources"
+  type        = string
+}
+
+variable "env" {
+  description = "Environment (e.g., prod, non-prod)"
+  type        = string
+}
+
 variable "instance_count" {
   description = "Number of instances to create"
   type        = number
+  default     = 1
 }
 
 variable "instance_type" {
-  description = "EC2 instance type"
+  description = "Instance type"
   type        = string
 }
 
@@ -14,28 +25,20 @@ variable "subnet_ids" {
 }
 
 variable "vpc_id" {
-  description = "ID of the VPC"
-  type        = string
-}
-
-variable "env" {
-  description = "Environment name"
+  description = "VPC ID"
   type        = string
 }
 
 variable "tags" {
-  description = "Tags for VM resources"
+  description = "Tags to apply to resources"
   type        = map(string)
+  default     = {}
 }
 
-variable "bastion_cidr" {
-  description = "CIDR block for bastion access"
-  type        = string
-}
-
-variable "prefix" {
-  description = "Resource name prefix"
-  type        = string
+variable "is_bastion" {
+  description = "Whether this is a bastion host"
+  type        = bool
+  default     = false
 }
 
 variable "key_name" {
@@ -43,8 +46,8 @@ variable "key_name" {
   type        = string
 }
 
-variable "is_bastion" {
-  description = "Whether this is a bastion host"
-  type        = bool
-  default     = false
+variable "bastion_sg" {
+  description = "Security group ID of the bastion host (required for non-bastion instances)"
+  type        = string
+  default     = null
 }

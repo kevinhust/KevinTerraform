@@ -1,16 +1,16 @@
-variable "vpc_cidr" {
+variable "vpc_id" {
   type        = string
-  description = "The CIDR block for the VPC"
+  description = "The ID of the VPC"
+}
+
+variable "subnet_cidrs" {
+  type        = list(string)
+  description = "List of subnet CIDR blocks"
 }
 
 variable "public_subnet_cidrs" {
   type        = list(string)
   description = "List of public subnet CIDR blocks"
-}
-
-variable "private_subnet_cidrs" {
-  type        = list(string)
-  description = "List of private subnet CIDR blocks"
 }
 
 variable "azs" {
@@ -21,12 +21,11 @@ variable "azs" {
 variable "env" {
   type        = string
   description = "The environment (e.g., non-prod, prod)"
-  default     = "non-prod"
 }
 
-variable "default_tags" {
+variable "tags" {
   type        = map(string)
-  description = "A map of default tags to apply to resources"
+  description = "A map of tags to apply to resources"
 }
 
 variable "prefix" {

@@ -1,6 +1,6 @@
 # Create VPC for non-prod environment
 module "vpc_nonprod" {
-  source   = "../../modules"
+  source   = "../../modules/vpc"
   vpc_cidr = var.vpc_cidr
   env      = var.env
   tags     = var.default_tags
@@ -9,8 +9,8 @@ module "vpc_nonprod" {
 
 # Create subnets for non-prod environment (2 public, 2 private)
 module "subnet_nonprod" {
-  source             = "../../modules"
-  vpc_cidr           = var.vpc_cidr  # Pass to vpc resource in the module
+  source             = "../../modules/subnet"
+  vpc_id             = module.vpc_nonprod.vpc_id
   subnet_cidrs       = concat(var.public_subnet_cidrs, var.private_subnet_cidrs)
   public_subnet_cidrs = var.public_subnet_cidrs
   azs                = var.azs
@@ -21,8 +21,8 @@ module "subnet_nonprod" {
 
 # Create Internet Gateway for non-prod environment
 module "internet_gw_nonprod" {
-  source         = "../../modules"
-  vpc_cidr       = var.vpc_cidr  # Pass to vpc resource in the module
+  source         = "../../modules/internet_gateway"
+  vpc_id         = module.vpc_nonprod.vpc_id
   route_table_id = aws_route_table.public_rt_nonprod.id
   env            = var.env
   tags           = var.default_tags
@@ -31,8 +31,7 @@ module "internet_gw_nonprod" {
 
 # Create NAT Gateway for non-prod private subnets
 module "nat_gw_nonprod" {
-  source                 = "../../modules"
-  vpc_cidr               = var.vpc_cidr  # Pass to vpc resource in the module
+  source                 = "../../modules/nat_gateway"
   public_subnet_id       = element(module.subnet_nonprod.subnet_ids, 0)
   private_route_table_id = aws_route_table.private_rt_nonprod.id
   env                    = var.env
@@ -40,24 +39,25 @@ module "nat_gw_nonprod" {
   prefix                 = var.prefix
 }
 
-# Create Bastion Host for SSH access to private subnets
+# Create Bastion Host for SSH access to private subnets (using vm module with is_bastion = true)
 module "bastion_nonprod" {
-  source         = "../../modules"
+  source         = "../../modules/vm"
   instance_count = 1
   instance_type  = "t2.micro"
-  subnet_ids     = [element(module.subnet_nonprod.subnet_ids, 0)]  # Public subnet
+  subnet_ids     = [element(module.subnet_nonprod.subnet_ids, 0)]
+  vpc_id         = module.vpc_nonprod.vpc_id
   env            = var.env
   tags           = var.default_tags
   bastion_cidr   = var.vpc_cidr
   prefix         = var.prefix
-  vpc_cidr       = var.vpc_cidr  # Pass to vpc resource in the module
   key_name       = "kevin-terraform-key"
+  is_bastion     = true
 }
 
 # Create public route table for non-prod environment
 resource "aws_route_table" "public_rt_nonprod" {
   vpc_id = module.vpc_nonprod.vpc_id
-  tags   = merge(var.default_tags, { Name = "${var.prefix}-${var.env}-public-rt" })
+  tags   = merge(var.default_tags, { Name = "\${var.prefix}-\${var.env}-public-rt" })
 }
 
 # Associate public subnets with public route table
@@ -70,7 +70,7 @@ resource "aws_route_table_association" "public_nonprod" {
 # Create private route table for non-prod environment
 resource "aws_route_table" "private_rt_nonprod" {
   vpc_id = module.vpc_nonprod.vpc_id
-  tags   = merge(var.default_tags, { Name = "${var.prefix}-${var.env}-private-rt" })
+  tags   = merge(var.default_tags, { Name = "\${var.prefix}-\${var.env}-private-rt" })
 }
 
 # Associate private subnets with private route table

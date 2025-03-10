@@ -37,20 +37,24 @@ data "aws_vpc" "non_prod" {
 
 # Get non-prod NAT Gateway information
 data "aws_nat_gateway" "non_prod" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.non_prod.id]
+  }
+  
+  filter {
+    name   = "state"
+    values = ["available"]
+  }
+  
   tags = {
-    Name = "${var.prefix}-non-prod-nat"
+    Name = "${var.prefix}-non-prod-nat-gw"  # Updated to match the likely tag format
   }
 }
 
 # Create private route table for prod environment
 resource "aws_route_table" "private_rt_prod" {
   vpc_id = module.vpc_prod.vpc_id
-
-  # Add route to Internet through Non-Prod NAT Gateway
-  route {
-    cidr_block = "0.0.0.0/0"
-    nat_gateway_id = data.aws_nat_gateway.non_prod.id
-  }
 
   tags = merge(var.default_tags, { Name = "${var.prefix}-${var.env}-private-rt" })
 }
@@ -98,4 +102,30 @@ module "vpc_peering" {
   accepter_private_route_table_id = tolist(data.aws_route_tables.non_prod_private.ids)[0]
 
   tags = var.default_tags
+}
+
+# Create a NAT Gateway in prod environment
+resource "aws_eip" "nat_eip" {
+  domain = "vpc"
+  tags = merge(var.default_tags, {
+    Name = "${var.prefix}-${var.env}-nat-eip"
+  })
+}
+
+resource "aws_nat_gateway" "nat_gw_prod" {
+  allocation_id = aws_eip.nat_eip.id
+  subnet_id     = module.subnet_prod.subnet_ids[0]  # Use the first private subnet
+  
+  tags = merge(var.default_tags, {
+    Name = "${var.prefix}-${var.env}-nat-gw"
+  })
+  
+  depends_on = [aws_internet_gateway.igw_prod]
+}
+
+# Add default route to the internet through the prod NAT Gateway
+resource "aws_route" "prod_to_internet" {
+  route_table_id         = aws_route_table.private_rt_prod.id
+  destination_cidr_block = "0.0.0.0/0"
+  nat_gateway_id         = aws_nat_gateway.nat_gw_prod.id
 }

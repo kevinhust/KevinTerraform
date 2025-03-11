@@ -106,7 +106,6 @@ module "vpc_peering" {
 
 # Create a NAT Gateway in prod environment
 resource "aws_eip" "nat_eip" {
-  domain = "vpc"
   tags = merge(var.default_tags, {
     Name = "${var.prefix}-${var.env}-nat-eip"
   })

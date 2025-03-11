@@ -1,4 +1,19 @@
 terraform {
+  backend "s3" {
+    bucket         = "kevinhust-a1-prod"
+    key            = "prod/webserver/terraform.tfstate"
+    region         = "us-east-1"
+    encrypt        = true
+    dynamodb_table = "terraform-locks-prod"
+  }
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 4.0"
+    }
+  }
+
   required_version = ">= 1.0.0"
 }
 
